@@ -6,160 +6,297 @@
 <title>Divino Sushi</title>
 
 <style>
-body {
-    font-family: Arial, sans-serif;
-    margin: 0;
-    background-color: #f5f1e8;
+
+@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;600&display=swap');
+
+html{scroll-behavior:smooth;}
+
+body{
+margin:0;
+font-family:'Noto Serif JP', serif;
+background:linear-gradient(#0f0f0f,#1a0000);
+color:#fff;
 }
 
-header {
-    text-align: center;
-    padding: 20px;
-    background-color: #ffffff;
+header{
+background:linear-gradient(90deg,#8B0000,#000);
+padding:25px;
+text-align:center;
+font-size:32px;
+letter-spacing:3px;
+border-bottom:2px solid #b30000;
 }
 
-h1 {
-    color: #c6a75e;
-    margin-bottom: 5px;
+.categoria{
+margin:40px 20px 20px 20px;
 }
 
-h2 {
-    color: #1f3c5b;
+.categoria h2{
+border-left:5px solid #b30000;
+padding-left:10px;
+font-size:22px;
+margin-bottom:15px;
 }
 
-.container {
-    padding: 20px;
+.grid{
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
+gap:20px;
 }
 
-.card {
-    background: white;
-    padding: 15px;
-    margin-bottom: 15px;
-    border-radius: 10px;
-    box-shadow: 0 3px 8px rgba(0,0,0,0.1);
+.produto{
+background:#1c1c1c;
+border-radius:12px;
+overflow:hidden;
+transition:0.4s;
+box-shadow:0 0 15px rgba(179,0,0,0.2);
 }
 
-button {
-    background-color: #c6a75e;
-    border: none;
-    padding: 8px 12px;
-    color: white;
-    border-radius: 5px;
-    cursor: pointer;
+.produto:hover{
+transform:translateY(-5px);
+box-shadow:0 0 25px rgba(255,0,0,0.4);
 }
 
-button:hover {
-    opacity: 0.8;
+.produto img{
+width:100%;
+height:180px;
+object-fit:cover;
 }
 
-input, select {
-    padding: 8px;
-    width: 100%;
-    margin-bottom: 10px;
+.produto-content{
+padding:15px;
 }
 
-#cart {
-    background: #fff;
-    padding: 15px;
-    border-radius: 10px;
+button{
+background:#b30000;
+color:white;
+border:none;
+padding:10px;
+margin-top:8px;
+cursor:pointer;
+border-radius:6px;
+transition:0.3s;
+width:100%;
 }
+
+button:hover{
+background:#ff0000;
+}
+
+select,input{
+width:100%;
+padding:8px;
+margin-top:8px;
+border-radius:5px;
+border:none;
+}
+
+#carrinho{
+background:#111;
+padding:20px;
+margin-top:40px;
+border-top:2px solid #b30000;
+}
+
+.total{
+font-size:20px;
+font-weight:bold;
+margin-top:10px;
+}
+
+#areaPix{
+display:none;
+background:#1a1a1a;
+padding:15px;
+border-radius:10px;
+margin-top:15px;
+}
+
 </style>
 </head>
-
 <body>
 
-<header>
-<h1>Divino Sushi</h1>
-<p>Carrapateira - PB</p>
-</header>
+<header>🍣 DIVINO SUSHI 🍤</header>
 
-<div class="container">
+<div id="produtos"></div>
 
-<h2>Cardápio</h2>
+<div id="carrinho">
+<h2>🛒 Meu Pedido</h2>
+<div id="listaCarrinho"></div>
 
-<div class="card">
-<h3>Joy Camarão Especial</h3>
-<p>R$ 5,00 (unidade)</p>
-<button onclick="addToCart('Joy Camarão',5)">Adicionar</button>
-</div>
+<h3>Entrega</h3>
 
-<div class="card">
-<h3>Hot Roll Doritos</h3>
-<p>R$ 4,00 (unidade)</p>
-<button onclick="addToCart('Hot Roll Doritos',4)">Adicionar</button>
-</div>
-
-<div class="card">
-<h3>Bolinha Crocante de Salmão</h3>
-<p>R$ 6,00 (unidade)</p>
-<button onclick="addToCart('Bolinha Salmão',6)">Adicionar</button>
-</div>
-
-<h2>Carrinho</h2>
-<div id="cart"></div>
-
-<h2>Finalizar Pedido</h2>
-
-<input type="text" id="nome" placeholder="Seu nome">
-<input type="text" id="endereco" placeholder="Endereço completo">
-<select id="taxa">
-<option value="5">Interior - R$5</option>
-<option value="10">Outra cidade - R$10</option>
+<select id="tipoEntrega" onchange="atualizarTaxa()">
+<option value="cidade">Cidade</option>
+<option value="sitio">Sítio</option>
+<option value="retirada">Retirada no Local</option>
 </select>
 
-<button onclick="finalizar()">Finalizar Pedido</button>
+<select id="cidade" onchange="atualizarTaxa()">
+<option value="carrapateira">Carrapateira</option>
+<option value="outra">Outra Cidade</option>
+</select>
+
+<p id="taxaEntrega">Taxa: R$ 0</p>
+
+<p class="total">Total: R$ <span id="total">0</span></p>
+
+<h3>Forma de Pagamento</h3>
+<select id="pagamento">
+<option value="pix">Pix</option>
+<option value="dinheiro">Dinheiro</option>
+</select>
+
+<button onclick="finalizarPedido()">Finalizar Pedido</button>
+
+<div id="areaPix">
+<p><strong>Chave Pix:</strong></p>
+<input type="text" id="chavePix" value="SUA-CHAVE-PIX-AQUI" readonly>
+<button onclick="copiarPix()">Copiar Chave Pix</button>
+<p>Após realizar o pagamento clique abaixo:</p>
+<button onclick="enviarPedido()">Já fiz o Pix</button>
+</div>
 
 </div>
 
 <script>
 
-let cart = [];
+const horarioInicio = 11;
+const horarioFim = 22;
 
-function addToCart(nome, preco) {
-    let item = cart.find(p => p.nome === nome);
-    if(item){
-        item.qtd += 1;
-    } else {
-        cart.push({nome, preco, qtd:1});
-    }
-    renderCart();
+const categorias = {
+"Peças":[
+{nome:"Joy Camarão Especial", preco:5},
+{nome:"Joy Salmão com Cream Cheese", preco:4.5},
+{nome:"Joy com Geleia de Maracujá", preco:4.5},
+{nome:"Joy com Doritos e Cream Cheese", preco:4.5},
+{nome:"Joy com Patê de Salmão", preco:4.5},
+{nome:"Hot Roll Doritos", preco:4},
+{nome:"Hot Roll de Camarão", preco:3},
+{nome:"Hot Roll de Salmão", preco:3},
+{nome:"Uramaki Filadélfia", preco:3}
+],
+"Temaki":[
+{nome:"Temaki Filadélfia de Salmão", preco:35},
+{nome:"Temaki Frito de Camarão", preco:35},
+{nome:"Temaki Frito de Salmão", preco:35},
+{nome:"Temaki de Salmão e Camarão", preco:40}
+],
+"Burgers":[
+{nome:"Sushi Burger de Salmão", preco:40},
+{nome:"Sushi Burger de Camarão", preco:40}
+],
+"Big Hot":[
+{nome:"Big Hot de Salmão Filadélfia", preco:35},
+{nome:"Big Hot de Camarão", preco:35},
+{nome:"Big Hot de Salmão e Camarão", preco:40}
+]
+};
+
+let carrinho=[];
+let taxa=0;
+
+function gerarNomeImagem(nome){
+return "imagens/"+nome.toLowerCase()
+.normalize("NFD").replace(/[\u0300-\u036f]/g,"")
+.replace(/ /g,"-")+".jpg";
 }
 
-function renderCart(){
-    let cartDiv = document.getElementById("cart");
-    cartDiv.innerHTML = "";
-    let total = 0;
+function carregarProdutos(){
+const container=document.getElementById("produtos");
 
-    cart.forEach(item => {
-        total += item.preco * item.qtd;
-        cartDiv.innerHTML += `
-            <p>${item.nome} - ${item.qtd}x - R$ ${item.preco * item.qtd}</p>
-        `;
-    });
+for(let categoria in categorias){
 
-    cartDiv.innerHTML += `<hr><strong>Total: R$ ${total}</strong>`;
+container.innerHTML+=`<div class="categoria"><h2>${categoria}</h2><div class="grid" id="${categoria}"></div></div>`;
+
+categorias[categoria].forEach((produto,index)=>{
+
+const imagem=gerarNomeImagem(produto.nome);
+
+document.getElementById(categoria).innerHTML+=`
+<div class="produto">
+<img src="${imagem}" onerror="this.style.display='none'">
+<div class="produto-content">
+<h3>${produto.nome}</h3>
+<p>R$ ${produto.preco.toFixed(2)}</p>
+<input type="number" id="${produto.nome}" min="1" value="1">
+<button onclick='adicionar("${produto.nome}",${produto.preco})'>Adicionar</button>
+</div>
+</div>
+`;
+
+});
+}
 }
 
-function finalizar(){
-    let nome = document.getElementById("nome").value;
-    let endereco = document.getElementById("endereco").value;
-    let taxa = parseFloat(document.getElementById("taxa").value);
-
-    let total = cart.reduce((acc,item)=> acc + item.preco * item.qtd,0);
-    total += taxa;
-
-    let mensagem = `Pedido Divino Sushi:%0A`;
-    cart.forEach(item=>{
-        mensagem += `${item.nome} - ${item.qtd}x%0A`;
-    });
-
-    mensagem += `Total + Entrega: R$ ${total}%0A`;
-    mensagem += `Nome: ${nome}%0A`;
-    mensagem += `Endereço: ${endereco}%0A`;
-    mensagem += `Chave Pix: 10498679470`;
-
-    window.open(`https://wa.me/5583993848611?text=${mensagem}`);
+function adicionar(nome,preco){
+const qtd=parseInt(document.getElementById(nome).value);
+carrinho.push({nome,preco,qtd});
+atualizarCarrinho();
 }
+
+function atualizarCarrinho(){
+let total=0;
+let lista="";
+carrinho.forEach(item=>{
+lista+=`<p>${item.nome} x${item.qtd}</p>`;
+total+=item.preco*item.qtd;
+});
+total+=taxa;
+document.getElementById("listaCarrinho").innerHTML=lista;
+document.getElementById("total").innerText=total.toFixed(2);
+}
+
+function atualizarTaxa(){
+const tipo=document.getElementById("tipoEntrega").value;
+const cidade=document.getElementById("cidade").value;
+
+if(tipo==="retirada") taxa=0;
+else if(tipo==="cidade") taxa=(cidade==="carrapateira")?0:10;
+else if(tipo==="sitio") taxa=(cidade==="carrapateira")?5:10;
+
+document.getElementById("taxaEntrega").innerText="Taxa: R$ "+taxa;
+atualizarCarrinho();
+}
+
+function copiarPix(){
+const chave=document.getElementById("chavePix");
+chave.select();
+document.execCommand("copy");
+alert("Chave Pix copiada!");
+}
+
+function finalizarPedido(){
+const hora=new Date().getHours();
+if(hora<horarioInicio||hora>=horarioFim){
+alert("Funcionamos das 11h às 22h.");
+return;
+}
+if(carrinho.length===0){
+alert("Carrinho vazio!");
+return;
+}
+if(document.getElementById("pagamento").value==="pix"){
+document.getElementById("areaPix").style.display="block";
+}else{
+enviarPedido();
+}
+}
+
+function enviarPedido(){
+let mensagem="🍣 *Novo Pedido - Divino Sushi* 🍤\n\n";
+carrinho.forEach(item=>{
+mensagem+=`${item.nome} x${item.qtd}\n`;
+});
+mensagem+=`\nTaxa: R$ ${taxa}`;
+mensagem+=`\nTotal: R$ ${document.getElementById("total").innerText}`;
+
+const numero="5583999999999";
+
+window.open(`https://wa.me/${numero}?text=${encodeURIComponent(mensagem)}`,"_blank");
+}
+
+carregarProdutos();
 
 </script>
 
