@@ -151,7 +151,7 @@ margin-top:15px;
 
 <div id="areaPix">
 <p><strong>Chave Pix:</strong></p>
-<input type="text" id="chavePix" value="SUA-CHAVE-PIX-AQUI" readonly>
+<input type="text" id="chavePix" value="74999403009" readonly>
 <button onclick="copiarPix()">Copiar Chave Pix</button>
 <p>Após realizar o pagamento clique abaixo:</p>
 <button onclick="enviarPedido()">Já fiz o Pix</button>
@@ -291,7 +291,7 @@ mensagem+=`${item.nome} x${item.qtd}\n`;
 mensagem+=`\nTaxa: R$ ${taxa}`;
 mensagem+=`\nTotal: R$ ${document.getElementById("total").innerText}`;
 
-const numero="5583999999999";
+const numero="5583993848611";
 
 window.open(`https://wa.me/${numero}?text=${encodeURIComponent(mensagem)}`,"_blank");
 }
