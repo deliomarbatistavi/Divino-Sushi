@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Divino Sushi</title>
+
+<style>
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    background-color: #f5f1e8;
+}
+
+header {
+    text-align: center;
+    padding: 20px;
+    background-color: #ffffff;
+}
+
+h1 {
+    color: #c6a75e;
+    margin-bottom: 5px;
+}
+
+h2 {
+    color: #1f3c5b;
+}
+
+.container {
+    padding: 20px;
+}
+
+.card {
+    background: white;
+    padding: 15px;
+    margin-bottom: 15px;
+    border-radius: 10px;
+    box-shadow: 0 3px 8px rgba(0,0,0,0.1);
+}
+
+button {
+    background-color: #c6a75e;
+    border: none;
+    padding: 8px 12px;
+    color: white;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+button:hover {
+    opacity: 0.8;
+}
+
+input, select {
+    padding: 8px;
+    width: 100%;
+    margin-bottom: 10px;
+}
+
+#cart {
+    background: #fff;
+    padding: 15px;
+    border-radius: 10px;
+}
+</style>
+</head>
+
+<body>
+
+<header>
+<h1>Divino Sushi</h1>
+<p>Carrapateira - PB</p>
+</header>
+
+<div class="container">
+
+<h2>Cardápio</h2>
+
+<div class="card">
+<h3>Joy Camarão Especial</h3>
+<p>R$ 5,00 (unidade)</p>
+<button onclick="addToCart('Joy Camarão',5)">Adicionar</button>
+</div>
+
+<div class="card">
+<h3>Hot Roll Doritos</h3>
+<p>R$ 4,00 (unidade)</p>
+<button onclick="addToCart('Hot Roll Doritos',4)">Adicionar</button>
+</div>
+
+<div class="card">
+<h3>Bolinha Crocante de Salmão</h3>
+<p>R$ 6,00 (unidade)</p>
+<button onclick="addToCart('Bolinha Salmão',6)">Adicionar</button>
+</div>
+
+<h2>Carrinho</h2>
+<div id="cart"></div>
+
+<h2>Finalizar Pedido</h2>
+
+<input type="text" id="nome" placeholder="Seu nome">
+<input type="text" id="endereco" placeholder="Endereço completo">
+<select id="taxa">
+<option value="5">Interior - R$5</option>
+<option value="10">Outra cidade - R$10</option>
+</select>
+
+<button onclick="finalizar()">Finalizar Pedido</button>
+
+</div>
+
+<script>
+
+let cart = [];
+
+function addToCart(nome, preco) {
+    let item = cart.find(p => p.nome === nome);
+    if(item){
+        item.qtd += 1;
+    } else {
+        cart.push({nome, preco, qtd:1});
+    }
+    renderCart();
+}
+
+function renderCart(){
+    let cartDiv = document.getElementById("cart");
+    cartDiv.innerHTML = "";
+    let total = 0;
+
+    cart.forEach(item => {
+        total += item.preco * item.qtd;
+        cartDiv.innerHTML += `
+            <p>${item.nome} - ${item.qtd}x - R$ ${item.preco * item.qtd}</p>
+        `;
+    });
+
+    cartDiv.innerHTML += `<hr><strong>Total: R$ ${total}</strong>`;
+}
+
+function finalizar(){
+    let nome = document.getElementById("nome").value;
+    let endereco = document.getElementById("endereco").value;
+    let taxa = parseFloat(document.getElementById("taxa").value);
+
+    let total = cart.reduce((acc,item)=> acc + item.preco * item.qtd,0);
+    total += taxa;
+
+    let mensagem = `Pedido Divino Sushi:%0A`;
+    cart.forEach(item=>{
+        mensagem += `${item.nome} - ${item.qtd}x%0A`;
+    });
+
+    mensagem += `Total + Entrega: R$ ${total}%0A`;
+    mensagem += `Nome: ${nome}%0A`;
+    mensagem += `Endereço: ${endereco}%0A`;
+    mensagem += `Chave Pix: 10498679470`;
+
+    window.open(`https://wa.me/5583993848611?text=${mensagem}`);
+}
+
+</script>
+
+</body>
+</html>
