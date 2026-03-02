@@ -213,7 +213,7 @@ let taxa=0;
 function gerarNomeImagem(nome){
 return "imagens/"+nome.toLowerCase()
 .normalize("NFD").replace(/[\u0300-\u036f]/g,"")
-.replace(/ /g,"-")+".jpg";
+.replace(/ /g,"-")+".jpeg";
 }
 
 function carregarProdutos(){
