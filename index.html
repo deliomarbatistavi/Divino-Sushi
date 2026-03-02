@@ -6,7 +6,6 @@
 <title>Divino Sushi</title>
 
 <style>
-
 @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;600&display=swap');
 
 html{scroll-behavior:smooth;}
@@ -111,7 +110,6 @@ padding:15px;
 border-radius:10px;
 margin-top:15px;
 }
-
 </style>
 </head>
 <body>
@@ -138,6 +136,13 @@ margin-top:15px;
 </select>
 
 <p id="taxaEntrega">Taxa: R$ 0</p>
+
+<h3>Informações do Cliente</h3>
+
+<input type="text" id="nomeCliente" placeholder="Seu Nome">
+<input type="text" id="rua" placeholder="Rua e Número">
+<input type="text" id="bairro" placeholder="Bairro">
+<input type="text" id="referencia" placeholder="Ponto de Referência">
 
 <p class="total">Total: R$ <span id="total">0</span></p>
 
@@ -206,11 +211,9 @@ function carregarProdutos(){
 const container=document.getElementById("produtos");
 
 for(let categoria in categorias){
-
 container.innerHTML+=`<div class="categoria"><h2>${categoria}</h2><div class="grid" id="${categoria}"></div></div>`;
 
-categorias[categoria].forEach((produto,index)=>{
-
+categorias[categoria].forEach(produto=>{
 const imagem=gerarNomeImagem(produto.nome);
 
 document.getElementById(categoria).innerHTML+=`
@@ -222,9 +225,7 @@ document.getElementById(categoria).innerHTML+=`
 <input type="number" id="${produto.nome}" min="1" value="1">
 <button onclick='adicionar("${produto.nome}",${produto.preco})'>Adicionar</button>
 </div>
-</div>
-`;
-
+</div>`;
 });
 }
 }
@@ -266,6 +267,21 @@ document.execCommand("copy");
 alert("Chave Pix copiada!");
 }
 
+function validarEndereco(){
+const tipo=document.getElementById("tipoEntrega").value;
+if(tipo==="retirada") return true;
+
+const nome=document.getElementById("nomeCliente").value;
+const rua=document.getElementById("rua").value;
+const bairro=document.getElementById("bairro").value;
+
+if(nome===""||rua===""||bairro===""){
+alert("Preencha Nome, Rua e Bairro!");
+return false;
+}
+return true;
+}
+
 function finalizarPedido(){
 const hora=new Date().getHours();
 if(hora<horarioInicio||hora>=horarioFim){
@@ -276,6 +292,8 @@ if(carrinho.length===0){
 alert("Carrinho vazio!");
 return;
 }
+if(!validarEndereco()) return;
+
 if(document.getElementById("pagamento").value==="pix"){
 document.getElementById("areaPix").style.display="block";
 }else{
@@ -284,10 +302,30 @@ enviarPedido();
 }
 
 function enviarPedido(){
+
 let mensagem="🍣 *Novo Pedido - Divino Sushi* 🍤\n\n";
+
+const tipo=document.getElementById("tipoEntrega").value;
+const nome=document.getElementById("nomeCliente").value;
+const rua=document.getElementById("rua").value;
+const bairro=document.getElementById("bairro").value;
+const referencia=document.getElementById("referencia").value;
+
+mensagem+=`Cliente: ${nome}\n`;
+
+if(tipo!=="retirada"){
+mensagem+=`Endereço: ${rua}, ${bairro}\n`;
+mensagem+=`Referência: ${referencia}\n`;
+}else{
+mensagem+=`Retirada no Local\n`;
+}
+
+mensagem+="\nItens:\n";
+
 carrinho.forEach(item=>{
 mensagem+=`${item.nome} x${item.qtd}\n`;
 });
+
 mensagem+=`\nTaxa: R$ ${taxa}`;
 mensagem+=`\nTotal: R$ ${document.getElementById("total").innerText}`;
 
