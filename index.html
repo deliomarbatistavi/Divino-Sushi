@@ -483,7 +483,107 @@ document.getElementById("total").innerText=total.toFixed(2);
 salvarCarrinho();
 
 }
+/* TAXA DE ENTREGA */
 
+function atualizarTaxa(){
+
+const tipo=document.getElementById("tipoEntrega").value;
+const cidade=document.getElementById("cidade").value;
+
+if(tipo==="retirada"){
+taxa=0;
+}
+
+else if(tipo==="cidade"){
+
+if(cidade==="carrapateira"){
+taxa=5;
+}else{
+taxa=10;
+}
+
+}
+
+else if(tipo==="sitio"){
+taxa=15;
+}
+
+document.getElementById("taxaEntrega").innerText="Taxa: R$ "+taxa;
+
+atualizarCarrinho();
+
+}
+
+
+/* FINALIZAR PEDIDO */
+
+function finalizarPedido(){
+
+const pagamento=document.getElementById("pagamento").value;
+
+if(carrinho.length===0){
+alert("Adicione produtos ao carrinho");
+return;
+}
+
+if(pagamento==="pix"){
+
+document.getElementById("areaPix").style.display="block";
+
+}else{
+
+enviarPedido();
+
+}
+
+}
+
+
+/* COPIAR PIX */
+
+function copiarPix(){
+
+const chave=document.getElementById("chavePix");
+
+chave.select();
+document.execCommand("copy");
+
+alert("Chave Pix copiada!");
+
+}
+
+
+/* ENVIAR PEDIDO WHATSAPP */
+
+function enviarPedido(){
+
+const nome=document.getElementById("nomeCliente").value;
+const rua=document.getElementById("rua").value;
+const bairro=document.getElementById("bairro").value;
+const referencia=document.getElementById("referencia").value;
+
+let mensagem="🍣 *Pedido Divino Sushi* %0A%0A";
+
+carrinho.forEach(item=>{
+
+mensagem+=item.qtd+"x "+item.nome+"%0A";
+
+});
+
+mensagem+="%0ATaxa: R$ "+taxa;
+
+mensagem+="%0ATotal: R$ "+document.getElementById("total").innerText;
+
+mensagem+="%0A%0ACliente: "+nome;
+mensagem+="%0ARua: "+rua;
+mensagem+="%0ABairro: "+bairro;
+mensagem+="%0AReferência: "+referencia;
+
+const telefone="5574999403009";
+
+window.open("https://wa.me/"+telefone+"?text="+mensagem);
+
+}
 </script>
 
 </body>
