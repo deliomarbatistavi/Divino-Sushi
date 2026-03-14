@@ -1,4 +1,3 @@
-```html
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
@@ -67,12 +66,6 @@ object-fit:cover;
 padding:15px;
 }
 
-.contador-produto{
-font-size:13px;
-margin-top:5px;
-color:#ffcccc;
-}
-
 button{
 background:#b30000;
 color:white;
@@ -118,28 +111,7 @@ border-radius:10px;
 margin-top:15px;
 }
 
-.controle-qtd{
-display:flex;
-align-items:center;
-gap:10px;
-margin-top:8px;
-}
-
-.btn-qtd{
-background:#b30000;
-border:none;
-color:white;
-font-size:18px;
-width:35px;
-height:35px;
-border-radius:6px;
-cursor:pointer;
-}
-
-.input-qtd{
-text-align:center;
-font-weight:bold;
-}
+/* ANIMAÇÃO DO PRODUTO */
 
 .animacao-produto{
 position:fixed;
@@ -149,7 +121,22 @@ background:#ff0000;
 border-radius:50%;
 z-index:9999;
 pointer-events:none;
+animation:voarCarrinho 0.8s ease forwards;
 }
+
+@keyframes voarCarrinho{
+0%{
+transform:scale(1);
+opacity:1;
+}
+
+100%{
+transform:translate(300px,600px) scale(0.1);
+opacity:0;
+}
+}
+
+/* CARRINHO FLUTUANTE */
 
 #carrinhoFlutuante{
 position:fixed;
@@ -162,7 +149,7 @@ border-radius:50px;
 padding:15px 20px;
 font-size:18px;
 cursor:pointer;
-box-shadow:0 0 15px rgba(0,0,0,0.5);
+box-shadow:0 0 15px rgba(0,0,0,0.6);
 z-index:9999;
 width:auto;
 }
@@ -172,28 +159,12 @@ background:white;
 color:#b30000;
 border-radius:50%;
 padding:3px 8px;
-margin-left:5px;
+margin-left:6px;
 font-weight:bold;
-}
-
-#popupCarrinho{
-position:fixed;
-bottom:90px;
-right:20px;
-width:320px;
-max-height:70vh;
-overflow:auto;
-background:#111;
-border-radius:12px;
-box-shadow:0 0 25px rgba(0,0,0,0.7);
-padding:15px;
-display:none;
-z-index:9998;
 }
 
 </style>
 </head>
-
 <body>
 
 <header>🍣 DIVINO SUSHI 🍤</header>
@@ -201,9 +172,7 @@ z-index:9998;
 <div id="produtos"></div>
 
 <div id="carrinho">
-
 <h2>🛒 Meu Pedido (<span id="contadorItens">0</span>)</h2>
-
 <div id="listaCarrinho"></div>
 
 <button onclick="limparCarrinho()">Limpar Carrinho</button>
@@ -233,7 +202,6 @@ z-index:9998;
 <p class="total">Total: R$ <span id="total">0</span></p>
 
 <h3>Forma de Pagamento</h3>
-
 <select id="pagamento">
 <option value="pix">Pix</option>
 <option value="dinheiro">Dinheiro</option>
@@ -242,177 +210,134 @@ z-index:9998;
 <button onclick="finalizarPedido()">Finalizar Pedido</button>
 
 <div id="areaPix">
-
 <p><strong>Chave Pix:</strong></p>
-
 <input type="text" id="chavePix" value="74999403009" readonly>
-
 <button onclick="copiarPix()">Copiar Chave Pix</button>
-
 <p>Após realizar o pagamento clique abaixo:</p>
-
 <button onclick="enviarPedido()">Já fiz o Pix</button>
-
 </div>
 
 </div>
 
-<div id="popupCarrinho">
+<!-- BOTÃO CARRINHO FLUTUANTE -->
 
-<h3>🛒 Meu Pedido</h3>
-
-<div id="listaCarrinhoPopup"></div>
-
-<p class="total">Total: R$ <span id="totalPopup">0</span></p>
-
-<button onclick="irParaCarrinho()">Finalizar</button>
-
-</div>
-
-<button id="carrinhoFlutuante" onclick="abrirCarrinho()">
+<button id="carrinhoFlutuante" onclick="irParaCarrinho()">
 🛒 <span id="contadorFlutuante">0</span>
 </button>
 
 <script>
 
-const categorias={
+const horarioInicio = 11;
+const horarioFim = 22;
+
+const categorias = {
 "Peças":[
-{nome:"Joy Camarão Especial",preco:5},
-{nome:"Joy Salmão com Cream Cheese",preco:4.5}
+{nome:"Joy Camarão Especial", preco:5},
+{nome:"Joy Salmão com Cream Cheese", preco:4.5},
+{nome:"Joy com Geleia de Maracujá", preco:4.5},
+{nome:"Joy com Doritos e Cream Cheese", preco:4.5},
+{nome:"Joy com Patê de Salmão", preco:4.5},
+{nome:"Hot Roll Doritos", preco:4},
+{nome:"Hot Roll de Camarão", preco:3.5},
+{nome:"Hot Roll de Salmão", preco:3.5},
+{nome:"Uramaki Filadélfia", preco:3.5}
+],
+
+"Temaki":[
+{nome:"Temaki Filadélfia de Salmão", preco:35},
+{nome:"Temaki Frito de Camarão", preco:35},
+{nome:"Temaki Frito de Salmão", preco:35},
+{nome:"Temaki de Salmão e Camarão", preco:40}
+],
+
+"Burgers":[
+{nome:"Sushi Burger de Salmão", preco:40},
+{nome:"Sushi Burger de Camarão", preco:40},
+{nome:"Sushi Burger de salmão grelhado", preco:40}
+],
+
+"Big Hot":[
+{nome:"Big Hot de Salmão Filadélfia", preco:35},
+{nome:"Big Hot de Camarão", preco:35},
+{nome:"Big Hot de Salmão e Camarão", preco:40},
+{nome:"Big Hot de Salmão grelhado", preco:35}
+],
+
+"Bolinhas":[
+{nome:"Bolinha de Camarão", preco:6},
+{nome:"Bolinha de Salmão", preco:6}
 ]
+
 };
 
 let carrinho=[];
 let taxa=0;
 
-function gerarId(nome){
-return nome.replace(/\s/g,'');
-}
-
 function gerarNomeImagem(nome){
-return "imagens/"+nome.toLowerCase().replace(/ /g,"-")+".jpeg";
+return "imagens/"+nome.toLowerCase()
+.normalize("NFD").replace(/[\u0300-\u036f]/g,"")
+.replace(/ /g,"-")+".jpeg";
 }
 
 function carregarProdutos(){
-
 const container=document.getElementById("produtos");
 
 for(let categoria in categorias){
-
 container.innerHTML+=`<div class="categoria"><h2>${categoria}</h2><div class="grid" id="${categoria}"></div></div>`;
 
 categorias[categoria].forEach(produto=>{
-
 const imagem=gerarNomeImagem(produto.nome);
-const id=gerarId(produto.nome);
 
 document.getElementById(categoria).innerHTML+=`
-
 <div class="produto">
-
 <img src="${imagem}" onerror="this.style.display='none'">
-
 <div class="produto-content">
-
 <h3>${produto.nome}</h3>
-
-<div class="contador-produto">Peças no carrinho: <span id="contador_${id}">0</span></div>
-
 <p>R$ ${produto.preco.toFixed(2)}</p>
-
-<div class="controle-qtd">
-
-<button class="btn-qtd" onclick="diminuirQtd('${id}')">−</button>
-
-<input class="input-qtd" type="number" id="${id}" min="1" value="1">
-
-<button class="btn-qtd" onclick="aumentarQtd('${id}')">+</button>
-
+<input type="number" id="${produto.nome}" min="1" value="1">
+<button onclick='animarProduto(event); adicionar("${produto.nome}",${produto.preco})'>Adicionar</button>
 </div>
-
-<button onclick='animarProduto(event); adicionar("${produto.nome}",${produto.preco},"${id}")'>Adicionar</button>
-
-</div>
-
-</div>
-
-`;
+</div>`;
 });
 }
 }
 
-function atualizarContadoresProdutos(){
+function adicionar(nome,preco){
 
-carrinho.forEach(item=>{
-const id=gerarId(item.nome);
-const el=document.getElementById("contador_"+id);
-if(el){
-el.innerText=item.qtd;
-}
-});
+const qtd=parseInt(document.getElementById(nome).value);
 
-}
+let itemExistente = carrinho.find(item => item.nome === nome);
 
-function aumentarQtd(id){
-const input=document.getElementById(id);
-input.value=parseInt(input.value)+1;
-}
-
-function diminuirQtd(id){
-const input=document.getElementById(id);
-if(input.value>1){
-input.value=parseInt(input.value)-1;
-}
-}
-
-function animarProduto(event){
-
-const carrinhoBtn=document.getElementById("carrinhoFlutuante");
-
-const anim=document.createElement("div");
-
-anim.classList.add("animacao-produto");
-
-anim.style.left=event.clientX+"px";
-anim.style.top=event.clientY+"px";
-
-document.body.appendChild(anim);
-
-const destino=carrinhoBtn.getBoundingClientRect();
-
-setTimeout(()=>{
-anim.style.transition="all 0.7s ease";
-anim.style.left=destino.left+"px";
-anim.style.top=destino.top+"px";
-anim.style.transform="scale(0.1)";
-anim.style.opacity="0";
-},10);
-
-setTimeout(()=>{anim.remove();},800);
-}
-
-function adicionar(nome,preco,id){
-
-const qtd=parseInt(document.getElementById(id).value);
-
-let item=carrinho.find(i=>i.nome===nome);
-
-if(item){
-item.qtd+=qtd;
+if(itemExistente){
+itemExistente.qtd += qtd;
 }else{
 carrinho.push({nome,preco,qtd});
 }
 
 atualizarCarrinho();
-atualizarContadoresProdutos();
 }
 
-function abrirCarrinho(){
-document.getElementById("popupCarrinho").style.display="block";
+function animarProduto(event){
+const anim=document.createElement("div");
+anim.classList.add("animacao-produto");
+anim.style.left=event.clientX+"px";
+anim.style.top=event.clientY+"px";
+document.body.appendChild(anim);
+setTimeout(()=>{anim.remove();},800);
 }
 
-function irParaCarrinho(){
-document.getElementById("carrinho").scrollIntoView({behavior:"smooth"});
+function aumentarItem(index){
+carrinho[index].qtd++;
+atualizarCarrinho();
+}
+
+function diminuirItem(index){
+if(carrinho[index].qtd > 1){
+carrinho[index].qtd--;
+}else{
+carrinho.splice(index,1);
+}
+atualizarCarrinho();
 }
 
 function limparCarrinho(){
@@ -420,14 +345,63 @@ carrinho=[];
 atualizarCarrinho();
 }
 
+function atualizarCarrinho(){
+let total=0;
+let lista="";
+
+carrinho.forEach((item,index)=>{
+lista+=`
+<div style="margin-bottom:8px;border-bottom:1px solid #333;padding-bottom:5px;">
+<p>${item.nome}</p>
+<button onclick="diminuirItem(${index})">➖</button>
+<span style="margin:0 10px;">${item.qtd}</span>
+<button onclick="aumentarItem(${index})">➕</button>
+</div>
+`;
+
+total+=item.preco*item.qtd;
+});
+
+total+=taxa;
+
+let totalItens=0;
+carrinho.forEach(item=>{
+totalItens+=item.qtd;
+});
+
+document.getElementById("contadorItens").innerText=totalItens;
+document.getElementById("contadorFlutuante").innerText=totalItens;
+
+document.getElementById("listaCarrinho").innerHTML=lista;
+document.getElementById("total").innerText=total.toFixed(2);
+}
+
+function irParaCarrinho(){
+document.getElementById("carrinho").scrollIntoView({
+behavior:"smooth"
+});
+}
+
 function atualizarTaxa(){
 
 const tipo=document.getElementById("tipoEntrega").value;
 const cidade=document.getElementById("cidade").value;
 
-if(tipo==="retirada"){taxa=0;}
-else if(tipo==="cidade"){taxa=cidade==="carrapateira"?5:10;}
-else if(tipo==="sitio"){taxa=15;}
+if(tipo==="retirada"){
+taxa=0;
+}
+
+else if(tipo==="cidade" && cidade==="carrapateira"){
+taxa=5;
+}
+
+else if(tipo==="cidade" && cidade==="outra"){
+taxa=10;
+}
+
+else if(tipo==="sitio"){
+taxa=15;
+}
 
 document.getElementById("taxaEntrega").innerText="Taxa: R$ "+taxa;
 
@@ -435,70 +409,77 @@ atualizarCarrinho();
 }
 
 function copiarPix(){
-
 const chave=document.getElementById("chavePix");
-
-navigator.clipboard.writeText(chave.value);
-
+chave.select();
+document.execCommand("copy");
 alert("Chave Pix copiada!");
+}
 
+function validarEndereco(){
+const tipo=document.getElementById("tipoEntrega").value;
+if(tipo==="retirada") return true;
+
+const nome=document.getElementById("nomeCliente").value;
+const rua=document.getElementById("rua").value;
+const bairro=document.getElementById("bairro").value;
+
+if(nome===""||rua===""||bairro===""){
+alert("Preencha Nome, Rua e Bairro!");
+return false;
+}
+return true;
 }
 
 function finalizarPedido(){
+const hora=new Date().getHours();
+if(hora<horarioInicio||hora>=horarioFim){
+alert("Funcionamos das 11h às 22h.");
+return;
+}
+if(carrinho.length===0){
+alert("Carrinho vazio!");
+return;
+}
+if(!validarEndereco()) return;
 
-const pagamento=document.getElementById("pagamento").value;
-
-if(pagamento==="pix"){
+if(document.getElementById("pagamento").value==="pix"){
 document.getElementById("areaPix").style.display="block";
 }else{
 enviarPedido();
 }
-
 }
 
 function enviarPedido(){
 
-let msg="🍣 *Pedido Divino Sushi*%0A%0A";
+let mensagem="🍣 *Novo Pedido - Divino Sushi* 🍤\n\n";
 
-carrinho.forEach(item=>{
-msg+=`${item.nome} x${item.qtd}%0A`;
-});
+const tipo=document.getElementById("tipoEntrega").value;
+const nome=document.getElementById("nomeCliente").value;
+const rua=document.getElementById("rua").value;
+const bairro=document.getElementById("bairro").value;
+const referencia=document.getElementById("referencia").value;
 
-msg+=`%0ATotal: R$ ${document.getElementById("total").innerText}`;
+mensagem+=`Cliente: ${nome}\n`;
 
-const telefone="5599999999999";
-
-window.open(`https://wa.me/${telefone}?text=${msg}`);
-
+if(tipo!=="retirada"){
+mensagem+=`Endereço: ${rua}, ${bairro}\n`;
+mensagem+=`Referência: ${referencia}\n`;
+}else{
+mensagem+=`Retirada no Local\n`;
 }
 
-function atualizarCarrinho(){
-
-let total=0;
-let lista="";
-let totalItens=0;
+mensagem+="\nItens:\n";
 
 carrinho.forEach(item=>{
-
-lista+=`<p>${item.nome} x${item.qtd}</p>`;
-
-total+=item.preco*item.qtd;
-
-totalItens+=item.qtd;
-
+mensagem+=`${item.nome} x${item.qtd}\n`;
 });
 
-total+=taxa;
+mensagem+=`\nTaxa: R$ ${taxa}`;
+mensagem+=`\nTotal: R$ ${document.getElementById("total").innerText}`;
 
-document.getElementById("contadorItens").innerText=totalItens;
-document.getElementById("contadorFlutuante").innerText=totalItens;
+const numero="5583993848611";
 
-document.getElementById("listaCarrinho").innerHTML=lista;
-document.getElementById("listaCarrinhoPopup").innerHTML=lista;
-
-document.getElementById("total").innerText=total.toFixed(2);
-document.getElementById("totalPopup").innerText=total.toFixed(2);
-
+window.open(`https://wa.me/${numero}?text=${encodeURIComponent(mensagem)}`,"_blank");
 }
 
 carregarProdutos();
@@ -507,4 +488,3 @@ carregarProdutos();
 
 </body>
 </html>
-```
