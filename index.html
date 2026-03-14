@@ -67,6 +67,12 @@ object-fit:cover;
 padding:15px;
 }
 
+.contador-produto{
+font-size:13px;
+margin-top:5px;
+color:#ffcccc;
+}
+
 button{
 background:#b30000;
 color:white;
@@ -112,8 +118,6 @@ border-radius:10px;
 margin-top:15px;
 }
 
-/* CONTROLE DE QUANTIDADE */
-
 .controle-qtd{
 display:flex;
 align-items:center;
@@ -137,8 +141,6 @@ text-align:center;
 font-weight:bold;
 }
 
-/* ANIMAÇÃO */
-
 .animacao-produto{
 position:fixed;
 width:30px;
@@ -148,8 +150,6 @@ border-radius:50%;
 z-index:9999;
 pointer-events:none;
 }
-
-/* BOTÃO FLUTUANTE */
 
 #carrinhoFlutuante{
 position:fixed;
@@ -176,8 +176,6 @@ margin-left:5px;
 font-weight:bold;
 }
 
-/* POPUP */
-
 #popupCarrinho{
 position:fixed;
 bottom:90px;
@@ -203,7 +201,9 @@ z-index:9998;
 <div id="produtos"></div>
 
 <div id="carrinho">
+
 <h2>🛒 Meu Pedido (<span id="contadorItens">0</span>)</h2>
+
 <div id="listaCarrinho"></div>
 
 <button onclick="limparCarrinho()">Limpar Carrinho</button>
@@ -233,6 +233,7 @@ z-index:9998;
 <p class="total">Total: R$ <span id="total">0</span></p>
 
 <h3>Forma de Pagamento</h3>
+
 <select id="pagamento">
 <option value="pix">Pix</option>
 <option value="dinheiro">Dinheiro</option>
@@ -241,19 +242,31 @@ z-index:9998;
 <button onclick="finalizarPedido()">Finalizar Pedido</button>
 
 <div id="areaPix">
+
 <p><strong>Chave Pix:</strong></p>
+
 <input type="text" id="chavePix" value="74999403009" readonly>
+
 <button onclick="copiarPix()">Copiar Chave Pix</button>
+
 <p>Após realizar o pagamento clique abaixo:</p>
+
 <button onclick="enviarPedido()">Já fiz o Pix</button>
+
 </div>
+
 </div>
 
 <div id="popupCarrinho">
+
 <h3>🛒 Meu Pedido</h3>
+
 <div id="listaCarrinhoPopup"></div>
+
 <p class="total">Total: R$ <span id="totalPopup">0</span></p>
+
 <button onclick="irParaCarrinho()">Finalizar</button>
+
 </div>
 
 <button id="carrinhoFlutuante" onclick="abrirCarrinho()">
@@ -261,9 +274,6 @@ z-index:9998;
 </button>
 
 <script>
-
-const horarioInicio = 11;
-const horarioFim = 22;
 
 const categorias={
 "Peças":[
@@ -275,9 +285,12 @@ const categorias={
 let carrinho=[];
 let taxa=0;
 
+function gerarId(nome){
+return nome.replace(/\s/g,'');
+}
+
 function gerarNomeImagem(nome){
-return "imagens/"+nome.toLowerCase()
-.replace(/ /g,"-")+".jpeg";
+return "imagens/"+nome.toLowerCase().replace(/ /g,"-")+".jpeg";
 }
 
 function carregarProdutos(){
@@ -291,6 +304,7 @@ container.innerHTML+=`<div class="categoria"><h2>${categoria}</h2><div class="gr
 categorias[categoria].forEach(produto=>{
 
 const imagem=gerarNomeImagem(produto.nome);
+const id=gerarId(produto.nome);
 
 document.getElementById(categoria).innerHTML+=`
 
@@ -302,25 +316,41 @@ document.getElementById(categoria).innerHTML+=`
 
 <h3>${produto.nome}</h3>
 
+<div class="contador-produto">Peças no carrinho: <span id="contador_${id}">0</span></div>
+
 <p>R$ ${produto.preco.toFixed(2)}</p>
 
 <div class="controle-qtd">
 
-<button class="btn-qtd" onclick="diminuirQtd('${produto.nome}')">−</button>
+<button class="btn-qtd" onclick="diminuirQtd('${id}')">−</button>
 
-<input class="input-qtd" type="number" id="${produto.nome}" min="1" value="1">
+<input class="input-qtd" type="number" id="${id}" min="1" value="1">
 
-<button class="btn-qtd" onclick="aumentarQtd('${produto.nome}')">+</button>
+<button class="btn-qtd" onclick="aumentarQtd('${id}')">+</button>
+
+</div>
+
+<button onclick='animarProduto(event); adicionar("${produto.nome}",${produto.preco},"${id}")'>Adicionar</button>
 
 </div>
 
-<button onclick='animarProduto(event); adicionar("${produto.nome}",${produto.preco})'>Adicionar</button>
+</div>
 
-</div>
-</div>
 `;
 });
 }
+}
+
+function atualizarContadoresProdutos(){
+
+carrinho.forEach(item=>{
+const id=gerarId(item.nome);
+const el=document.getElementById("contador_"+id);
+if(el){
+el.innerText=item.qtd;
+}
+});
+
 }
 
 function aumentarQtd(id){
@@ -361,9 +391,9 @@ anim.style.opacity="0";
 setTimeout(()=>{anim.remove();},800);
 }
 
-function adicionar(nome,preco){
+function adicionar(nome,preco,id){
 
-const qtd=parseInt(document.getElementById(nome).value);
+const qtd=parseInt(document.getElementById(id).value);
 
 let item=carrinho.find(i=>i.nome===nome);
 
@@ -374,6 +404,7 @@ carrinho.push({nome,preco,qtd});
 }
 
 atualizarCarrinho();
+atualizarContadoresProdutos();
 }
 
 function abrirCarrinho(){
@@ -384,13 +415,70 @@ function irParaCarrinho(){
 document.getElementById("carrinho").scrollIntoView({behavior:"smooth"});
 }
 
+function limparCarrinho(){
+carrinho=[];
+atualizarCarrinho();
+}
+
+function atualizarTaxa(){
+
+const tipo=document.getElementById("tipoEntrega").value;
+const cidade=document.getElementById("cidade").value;
+
+if(tipo==="retirada"){taxa=0;}
+else if(tipo==="cidade"){taxa=cidade==="carrapateira"?5:10;}
+else if(tipo==="sitio"){taxa=15;}
+
+document.getElementById("taxaEntrega").innerText="Taxa: R$ "+taxa;
+
+atualizarCarrinho();
+}
+
+function copiarPix(){
+
+const chave=document.getElementById("chavePix");
+
+navigator.clipboard.writeText(chave.value);
+
+alert("Chave Pix copiada!");
+
+}
+
+function finalizarPedido(){
+
+const pagamento=document.getElementById("pagamento").value;
+
+if(pagamento==="pix"){
+document.getElementById("areaPix").style.display="block";
+}else{
+enviarPedido();
+}
+
+}
+
+function enviarPedido(){
+
+let msg="🍣 *Pedido Divino Sushi*%0A%0A";
+
+carrinho.forEach(item=>{
+msg+=`${item.nome} x${item.qtd}%0A`;
+});
+
+msg+=`%0ATotal: R$ ${document.getElementById("total").innerText}`;
+
+const telefone="5599999999999";
+
+window.open(`https://wa.me/${telefone}?text=${msg}`);
+
+}
+
 function atualizarCarrinho(){
 
 let total=0;
 let lista="";
 let totalItens=0;
 
-carrinho.forEach((item,index)=>{
+carrinho.forEach(item=>{
 
 lista+=`<p>${item.nome} x${item.qtd}</p>`;
 
@@ -410,6 +498,7 @@ document.getElementById("listaCarrinhoPopup").innerHTML=lista;
 
 document.getElementById("total").innerText=total.toFixed(2);
 document.getElementById("totalPopup").innerText=total.toFixed(2);
+
 }
 
 carregarProdutos();
@@ -419,5 +508,3 @@ carregarProdutos();
 </body>
 </html>
 ```
-
-
