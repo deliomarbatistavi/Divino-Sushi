@@ -49,6 +49,7 @@ border-radius:12px;
 overflow:hidden;
 transition:0.4s;
 box-shadow:0 0 15px rgba(179,0,0,0.2);
+position:relative;
 }
 
 .produto:hover{
@@ -82,6 +83,32 @@ button:hover{
 background:#ff0000;
 }
 
+.controleProduto{
+display:flex;
+align-items:center;
+justify-content:center;
+gap:10px;
+margin-top:8px;
+}
+
+.btnQtd{
+background:#b30000;
+border:none;
+color:white;
+width:35px;
+height:35px;
+font-size:18px;
+border-radius:6px;
+cursor:pointer;
+}
+
+.qtdProduto{
+font-size:16px;
+font-weight:bold;
+width:30px;
+text-align:center;
+}
+
 select,input{
 width:100%;
 padding:8px;
@@ -111,29 +138,43 @@ border-radius:10px;
 margin-top:15px;
 }
 
-/* ANIMAÇÃO DO PRODUTO */
+/* carrinho flutuante */
 
-.animacao-produto{
+#btnCarrinho{
 position:fixed;
-width:30px;
-height:30px;
+bottom:25px;
+right:25px;
+background:#b30000;
+color:white;
+border:none;
+border-radius:50px;
+padding:15px 20px;
+font-size:18px;
+cursor:pointer;
+box-shadow:0 0 20px rgba(0,0,0,0.6);
+z-index:9999;
+}
+
+#contadorCarrinho{
+background:white;
+color:#b30000;
+border-radius:50%;
+padding:3px 8px;
+margin-left:6px;
+font-weight:bold;
+}
+
+/* animação */
+
+.animacao{
+position:fixed;
+width:25px;
+height:25px;
 background:#ff0000;
 border-radius:50%;
 z-index:9999;
 pointer-events:none;
-animation:voarCarrinho 0.8s ease forwards;
-}
-
-@keyframes voarCarrinho{
-0%{
-transform:scale(1);
-opacity:1;
-}
-
-100%{
-transform:translate(300px,600px) scale(0.1);
-opacity:0;
-}
+transition:all 0.8s ease;
 }
 
 </style>
@@ -145,7 +186,9 @@ opacity:0;
 <div id="produtos"></div>
 
 <div id="carrinho">
+
 <h2>🛒 Meu Pedido (<span id="contadorItens">0</span>)</h2>
+
 <div id="listaCarrinho"></div>
 
 <button onclick="limparCarrinho()">Limpar Carrinho</button>
@@ -175,6 +218,7 @@ opacity:0;
 <p class="total">Total: R$ <span id="total">0</span></p>
 
 <h3>Forma de Pagamento</h3>
+
 <select id="pagamento">
 <option value="pix">Pix</option>
 <option value="dinheiro">Dinheiro</option>
@@ -192,247 +236,203 @@ opacity:0;
 
 </div>
 
+<button id="btnCarrinho" onclick="irParaCarrinho()">
+🛒 <span id="contadorCarrinho">0</span>
+</button>
+
 <script>
 
-const horarioInicio = 11;
-const horarioFim = 22;
+let carrinho = JSON.parse(localStorage.getItem("carrinho")) || [];
+let taxa = 0;
 
-const categorias = {
+const categorias={
 "Peças":[
-{nome:"Joy Camarão Especial", preco:5},
-{nome:"Joy Salmão com Cream Cheese", preco:4.5},
-{nome:"Joy com Geleia de Maracujá", preco:4.5},
-{nome:"Joy com Doritos e Cream Cheese", preco:4.5},
-{nome:"Joy com Patê de Salmão", preco:4.5},
-{nome:"Hot Roll Doritos", preco:4},
-{nome:"Hot Roll de Camarão", preco:3},
-{nome:"Hot Roll de Salmão", preco:3},
-{nome:"Uramaki Filadélfia", preco:3}
-],
-
-"Temaki":[
-{nome:"Temaki Filadélfia de Salmão", preco:35},
-{nome:"Temaki Frito de Camarão", preco:35},
-{nome:"Temaki Frito de Salmão", preco:35},
-{nome:"Temaki de Salmão e Camarão", preco:40}
-],
-
-"Burgers":[
-{nome:"Sushi Burger de Salmão", preco:40},
-{nome:"Sushi Burger de Camarão", preco:40},
-{nome:"Sushi Burger de salmão grelhado", preco:40}
-],
-
-"Big Hot":[
-{nome:"Big Hot de Salmão Filadélfia", preco:35},
-{nome:"Big Hot de Camarão", preco:35},
-{nome:"Big Hot de Salmão e Camarão", preco:40},
-{nome:"Big Hot de Salmão grelhado", preco:35}
-],
-
-"Bolinhas":[
-{nome:"Bolinha de Camarão", preco:6},
-{nome:"Bolinha de Salmão", preco:6}
+{nome:"Joy Camarão Especial",preco:5},
+{nome:"Joy Salmão com Cream Cheese",preco:4.5}
 ]
-
 };
 
-let carrinho=[];
-let taxa=0;
-
-function gerarNomeImagem(nome){
-return "imagens/"+nome.toLowerCase()
-.normalize("NFD").replace(/[\u0300-\u036f]/g,"")
-.replace(/ /g,"-")+".jpeg";
+function gerarId(nome){
+return nome.replace(/\s/g,"");
 }
 
 function carregarProdutos(){
+
 const container=document.getElementById("produtos");
 
 for(let categoria in categorias){
+
 container.innerHTML+=`<div class="categoria"><h2>${categoria}</h2><div class="grid" id="${categoria}"></div></div>`;
 
 categorias[categoria].forEach(produto=>{
-const imagem=gerarNomeImagem(produto.nome);
+
+const id=gerarId(produto.nome);
 
 document.getElementById(categoria).innerHTML+=`
+
 <div class="produto">
-<img src="${imagem}" onerror="this.style.display='none'">
+
 <div class="produto-content">
+
 <h3>${produto.nome}</h3>
+
 <p>R$ ${produto.preco.toFixed(2)}</p>
-<input type="number" id="${produto.nome}" min="1" value="1">
-<button onclick='animarProduto(event); adicionar("${produto.nome}",${produto.preco})'>Adicionar</button>
+
+<div class="controleProduto">
+
+<button class="btnQtd" onclick="alterarQtd('${id}',-1)">−</button>
+
+<span class="qtdProduto" id="qtd_${id}">1</span>
+
+<button class="btnQtd" onclick="alterarQtd('${id}',1)">+</button>
+
 </div>
-</div>`;
+
+<button onclick='animar(event); adicionar("${produto.nome}",${produto.preco},"${id}")'>
+Adicionar
+</button>
+
+</div>
+
+</div>
+
+`;
 });
 }
+
 }
 
-function adicionar(nome,preco){
-const qtd=parseInt(document.getElementById(nome).value);
-carrinho.push({nome,preco,qtd});
-atualizarCarrinho();
+function alterarQtd(id,valor){
+
+let span=document.getElementById("qtd_"+id);
+
+let qtd=parseInt(span.innerText);
+
+qtd+=valor;
+
+if(qtd<1)qtd=1;
+
+span.innerText=qtd;
+
 }
 
-function animarProduto(event){
-const anim=document.createElement("div");
-anim.classList.add("animacao-produto");
-anim.style.left=event.clientX+"px";
-anim.style.top=event.clientY+"px";
-document.body.appendChild(anim);
-setTimeout(()=>{anim.remove();},800);
-}
+function adicionar(nome,preco,id){
 
-function aumentarItem(index){
-carrinho[index].qtd++;
-atualizarCarrinho();
-}
+let qtd=parseInt(document.getElementById("qtd_"+id).innerText);
 
-function diminuirItem(index){
-if(carrinho[index].qtd > 1){
-carrinho[index].qtd--;
+let item=carrinho.find(i=>i.nome===nome);
+
+if(item){
+item.qtd+=qtd;
 }else{
-carrinho.splice(index,1);
-}
-atualizarCarrinho();
+carrinho.push({nome,preco,qtd});
 }
 
-function limparCarrinho(){
-carrinho=[];
+salvarCarrinho();
+
 atualizarCarrinho();
+
+}
+
+function salvarCarrinho(){
+
+localStorage.setItem("carrinho",JSON.stringify(carrinho));
+
+}
+
+function animar(event){
+
+const btn=document.getElementById("btnCarrinho");
+
+const bola=document.createElement("div");
+
+bola.className="animacao";
+
+bola.style.left=event.clientX+"px";
+bola.style.top=event.clientY+"px";
+
+document.body.appendChild(bola);
+
+let destino=btn.getBoundingClientRect();
+
+setTimeout(()=>{
+bola.style.left=destino.left+"px";
+bola.style.top=destino.top+"px";
+bola.style.transform="scale(0.1)";
+bola.style.opacity="0";
+},10);
+
+setTimeout(()=>{
+bola.remove();
+},800);
+
 }
 
 function atualizarCarrinho(){
+
 let total=0;
 let lista="";
+let itens=0;
 
 carrinho.forEach((item,index)=>{
+
 lista+=`
-<div style="margin-bottom:8px;border-bottom:1px solid #333;padding-bottom:5px;">
-<p>${item.nome}</p>
-<button onclick="diminuirItem(${index})">➖</button>
-<span style="margin:0 10px;">${item.qtd}</span>
-<button onclick="aumentarItem(${index})">➕</button>
+
+<div style="margin-bottom:8px">
+
+${item.nome} x${item.qtd}
+
+<button onclick="remover(${index})">❌</button>
+
 </div>
+
 `;
 
 total+=item.preco*item.qtd;
+
+itens+=item.qtd;
+
 });
 
 total+=taxa;
 
-let totalItens=0;
-carrinho.forEach(item=>{
-totalItens+=item.qtd;
-});
-
-document.getElementById("contadorItens").innerText=totalItens;
 document.getElementById("listaCarrinho").innerHTML=lista;
+
 document.getElementById("total").innerText=total.toFixed(2);
+
+document.getElementById("contadorItens").innerText=itens;
+
+document.getElementById("contadorCarrinho").innerText=itens;
+
+salvarCarrinho();
+
 }
 
-function atualizarTaxa(){
+function remover(index){
 
-const tipo=document.getElementById("tipoEntrega").value;
-const cidade=document.getElementById("cidade").value;
-
-if(tipo==="retirada"){
-taxa=0;
-}
-
-else if(tipo==="cidade" && cidade==="carrapateira"){
-taxa=5;
-}
-
-else if(tipo==="cidade" && cidade==="outra"){
-taxa=10;
-}
-
-else if(tipo==="sitio"){
-taxa=15;
-}
-
-document.getElementById("taxaEntrega").innerText="Taxa: R$ "+taxa;
+carrinho.splice(index,1);
 
 atualizarCarrinho();
+
 }
 
-function copiarPix(){
-const chave=document.getElementById("chavePix");
-chave.select();
-document.execCommand("copy");
-alert("Chave Pix copiada!");
+function limparCarrinho(){
+
+carrinho=[];
+
+atualizarCarrinho();
+
 }
 
-function validarEndereco(){
-const tipo=document.getElementById("tipoEntrega").value;
-if(tipo==="retirada") return true;
+function irParaCarrinho(){
 
-const nome=document.getElementById("nomeCliente").value;
-const rua=document.getElementById("rua").value;
-const bairro=document.getElementById("bairro").value;
+document.getElementById("carrinho").scrollIntoView({behavior:"smooth"});
 
-if(nome===""||rua===""||bairro===""){
-alert("Preencha Nome, Rua e Bairro!");
-return false;
-}
-return true;
-}
-
-function finalizarPedido(){
-const hora=new Date().getHours();
-if(hora<horarioInicio||hora>=horarioFim){
-alert("Funcionamos das 11h às 22h.");
-return;
-}
-if(carrinho.length===0){
-alert("Carrinho vazio!");
-return;
-}
-if(!validarEndereco()) return;
-
-if(document.getElementById("pagamento").value==="pix"){
-document.getElementById("areaPix").style.display="block";
-}else{
-enviarPedido();
-}
-}
-
-function enviarPedido(){
-
-let mensagem="🍣 *Novo Pedido - Divino Sushi* 🍤\n\n";
-
-const tipo=document.getElementById("tipoEntrega").value;
-const nome=document.getElementById("nomeCliente").value;
-const rua=document.getElementById("rua").value;
-const bairro=document.getElementById("bairro").value;
-const referencia=document.getElementById("referencia").value;
-
-mensagem+=`Cliente: ${nome}\n`;
-
-if(tipo!=="retirada"){
-mensagem+=`Endereço: ${rua}, ${bairro}\n`;
-mensagem+=`Referência: ${referencia}\n`;
-}else{
-mensagem+=`Retirada no Local\n`;
-}
-
-mensagem+="\nItens:\n";
-
-carrinho.forEach(item=>{
-mensagem+=`${item.nome} x${item.qtd}\n`;
-});
-
-mensagem+=`\nTaxa: R$ ${taxa}`;
-mensagem+=`\nTotal: R$ ${document.getElementById("total").innerText}`;
-
-const numero="5583993848611";
-
-window.open(`https://wa.me/${numero}?text=${encodeURIComponent(mensagem)}`,"_blank");
 }
 
 carregarProdutos();
+
+atualizarCarrinho();
 
 </script>
 
