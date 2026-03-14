@@ -110,6 +110,32 @@ padding:15px;
 border-radius:10px;
 margin-top:15px;
 }
+
+/* ANIMAÇÃO DO PRODUTO */
+
+.animacao-produto{
+position:fixed;
+width:30px;
+height:30px;
+background:#ff0000;
+border-radius:50%;
+z-index:9999;
+pointer-events:none;
+animation:voarCarrinho 0.8s ease forwards;
+}
+
+@keyframes voarCarrinho{
+0%{
+transform:scale(1);
+opacity:1;
+}
+
+100%{
+transform:translate(300px,600px) scale(0.1);
+opacity:0;
+}
+}
+
 </style>
 </head>
 <body>
@@ -119,8 +145,10 @@ margin-top:15px;
 <div id="produtos"></div>
 
 <div id="carrinho">
-<h2>🛒 Meu Pedido</h2>
+<h2>🛒 Meu Pedido (<span id="contadorItens">0</span>)</h2>
 <div id="listaCarrinho"></div>
+
+<button onclick="limparCarrinho()">Limpar Carrinho</button>
 
 <h3>Entrega</h3>
 
@@ -177,9 +205,9 @@ const categorias = {
 {nome:"Joy com Doritos e Cream Cheese", preco:4.5},
 {nome:"Joy com Patê de Salmão", preco:4.5},
 {nome:"Hot Roll Doritos", preco:4},
-{nome:"Hot Roll de Camarão", preco:3},
-{nome:"Hot Roll de Salmão", preco:3},
-{nome:"Uramaki Filadélfia", preco:3}
+{nome:"Hot Roll de Camarão", preco:3.5},
+{nome:"Hot Roll de Salmão", preco:3.5},
+{nome:"Uramaki Filadélfia", preco:3.5}
 ],
 
 "Temaki":[
@@ -192,7 +220,7 @@ const categorias = {
 "Burgers":[
 {nome:"Sushi Burger de Salmão", preco:40},
 {nome:"Sushi Burger de Camarão", preco:40},
-{nome:"Sushi Burger de salmão grelhado", preco:40}  
+{nome:"Sushi Burger de salmão grelhado", preco:40}
 ],
 
 "Big Hot":[
@@ -234,7 +262,7 @@ document.getElementById(categoria).innerHTML+=`
 <h3>${produto.nome}</h3>
 <p>R$ ${produto.preco.toFixed(2)}</p>
 <input type="number" id="${produto.nome}" min="1" value="1">
-<button onclick='adicionar("${produto.nome}",${produto.preco})'>Adicionar</button>
+<button onclick='animarProduto(event); adicionar("${produto.nome}",${produto.preco})'>Adicionar</button>
 </div>
 </div>`;
 });
@@ -247,7 +275,34 @@ carrinho.push({nome,preco,qtd});
 atualizarCarrinho();
 }
 
-function atualizarCarrinho(){
+function animarProduto(event){
+const anim=document.createElement("div");
+anim.classList.add("animacao-produto");
+anim.style.left=event.clientX+"px";
+anim.style.top=event.clientY+"px";
+document.body.appendChild(anim);
+setTimeout(()=>{anim.remove();},800);
+}
+
+function aumentarItem(index){
+carrinho[index].qtd++;
+atualizarCarrinho();
+}
+
+function diminuirItem(index){
+if(carrinho[index].qtd > 1){
+carrinho[index].qtd--;
+}else{
+carrinho.splice(index,1);
+}
+atualizarCarrinho();
+}
+
+function limparCarrinho(){
+carrinho=[];
+atualizarCarrinho();
+}
+
 function atualizarCarrinho(){
 let total=0;
 let lista="";
@@ -256,13 +311,9 @@ carrinho.forEach((item,index)=>{
 lista+=`
 <div style="margin-bottom:8px;border-bottom:1px solid #333;padding-bottom:5px;">
 <p>${item.nome}</p>
-
 <button onclick="diminuirItem(${index})">➖</button>
-
 <span style="margin:0 10px;">${item.qtd}</span>
-
 <button onclick="aumentarItem(${index})">➕</button>
-
 </div>
 `;
 
@@ -271,8 +322,40 @@ total+=item.preco*item.qtd;
 
 total+=taxa;
 
+let totalItens=0;
+carrinho.forEach(item=>{
+totalItens+=item.qtd;
+});
+
+document.getElementById("contadorItens").innerText=totalItens;
 document.getElementById("listaCarrinho").innerHTML=lista;
 document.getElementById("total").innerText=total.toFixed(2);
+}
+
+function atualizarTaxa(){
+
+const tipo=document.getElementById("tipoEntrega").value;
+const cidade=document.getElementById("cidade").value;
+
+if(tipo==="retirada"){
+taxa=0;
+}
+
+else if(tipo==="cidade" && cidade==="carrapateira"){
+taxa=5;
+}
+
+else if(tipo==="cidade" && cidade==="outra"){
+taxa=10;
+}
+
+else if(tipo==="sitio"){
+taxa=15;
+}
+
+document.getElementById("taxaEntrega").innerText="Taxa: R$ "+taxa;
+
+atualizarCarrinho();
 }
 
 function copiarPix(){
@@ -355,3 +438,4 @@ carregarProdutos();
 
 </body>
 </html>
+
