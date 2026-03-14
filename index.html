@@ -270,8 +270,17 @@ document.getElementById(categoria).innerHTML+=`
 }
 
 function adicionar(nome,preco){
+
 const qtd=parseInt(document.getElementById(nome).value);
+
+let itemExistente = carrinho.find(item => item.nome === nome);
+
+if(itemExistente){
+itemExistente.qtd += qtd;
+}else{
 carrinho.push({nome,preco,qtd});
+}
+
 atualizarCarrinho();
 }
 
